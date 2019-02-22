@@ -184,23 +184,29 @@ class HarmonyClient():
         logger.debug("Retrieving Harmony Hub information.")
         url = 'http://{}:{}/'.format(self._ip_address, DEFAULT_HUB_PORT)
         headers = {
-            'Origin': 'http://localhost.nebula.myharmony.com',
+            #'Origin': 'http://localhost.nebula.myharmony.com',
+            'Origin': 'http://sl.dhg.myharmony.com/',
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Accept-Charset': 'utf-8',
         }
         json_request = {
             "id ": 1,
-            "cmd": "connect.discoveryinfo?get",
+            #"cmd": "connect.discoveryinfo?get",
+            "cmd":"setup.account?getProvisionInfo",
             "params": {}
         }
         async with ClientSession() as session:
             async with session.post(
                 url, json=json_request, headers=headers) as response:
+                assert response.status == 200
                 json_response = await response.json()
-                self._friendly_name = json_response['data']['friendlyName']
-                self._remote_id = str(json_response['data']['remoteId'])
-                domain = urlparse(json_response['data']['discoveryServerUri'])
+                logger.info(json.dumps(json_response, indent=2))
+                self._friendly_name = json_response['data'].get('friendlyName','Unknown')
+                self._remote_id = str(json_response['data']['activeRemoteId'])
+                #self._remote_id = str(json_response['data']['remoteId'])
+                #domain = urlparse(json_response['data']['discoveryServerUri'])
+                domain = urlparse(json_response['data']['discoveryServer'])
                 self._domain = domain.netloc if domain.netloc else \
                     DEFAULT_DOMAIN
                 self._email = json_response['data']['email']
